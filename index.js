@@ -27,16 +27,6 @@ const client = new Client({ config });
 client.setEnvironment("TEST");
 const checkout = new CheckoutAPI(client);
 
-app.engine(
-  "handlebars",
-  hbs.engine({
-    defaultLayout: "main",
-    layoutsDir: __dirname + "/views/layouts",
-    helpers: require("./util/helpers"),
-  })
-);
-
-app.set("view engine", "handlebars");
 
 /* ################# API ENDPOINTS ###################### */
 
@@ -66,7 +56,8 @@ app.post("/api/payments", async (req, res) => {
     // allows for gitpod support
     const localhost = req.get('host');
     // const isHttps = req.connection.encrypted;
-    const protocol = req.socket.encrypted? 'https' : 'http';    
+    const protocol = req.socket.encrypted? 'https' : 'http';
+    
     // ideally the data passed here should be computed based on business logic
     const response = await checkout.PaymentsApi.payments({
       amount: { currency, value: 10000 }, // value is 100€ in minor units
