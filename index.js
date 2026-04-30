@@ -36,6 +36,11 @@ app.post("/api/paymentMethods", async (req, res) => {
     const response = await checkout.PaymentsApi.paymentMethods({
       channel: "Web",
       merchantAccount: process.env.ADYEN_MERCHANT_ACCOUNT,
+      /*
+      TODO:
+      pass in amount obj (incl. currency) and countryCode, having assigned
+      these using controls to be built into the UI, i.e. 'Select your country" drop-down')
+      */
     });
     res.json(response);
   } catch (err) {
@@ -46,7 +51,13 @@ app.post("/api/paymentMethods", async (req, res) => {
 
 // submitting a payment
 app.post("/api/payments", async (req, res) => {
+
+  /**
+   * TODO:
+   * replace this with dynamic currency, controlled by the country-select UI element
+   */
   const currency = findCurrency(req.body.paymentMethod.type);
+  
   // find shopper IP from request
   const shopperIP = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
 
@@ -57,7 +68,7 @@ app.post("/api/payments", async (req, res) => {
     const localhost = req.get('host');
     // const isHttps = req.connection.encrypted;
     const protocol = req.socket.encrypted? 'https' : 'http';
-    
+
     // ideally the data passed here should be computed based on business logic
     const response = await checkout.PaymentsApi.payments({
       amount: { currency, value: 10000 }, // value is 100€ in minor units
@@ -82,12 +93,19 @@ app.post("/api/payments", async (req, res) => {
         typeof req.body.billingAddress === "undefined" || Object.keys(req.body.billingAddress).length === 0
           ? null
           : req.body.billingAddress,
-      deliveryDate: new Date("2017-07-17T13:42:40.428+01:00"),
-      shopperStatement: "Aceitar o pagamento até 15 dias após o vencimento.Não cobrar juros. Não aceitar o pagamento com cheque",
       // below fields are required for Klarna, line items included
+
+      /**
+       * TODO:
+       * populate countryCode below using the UI control
+       */
       countryCode: req.body.paymentMethod.type.includes("klarna") ? "DE" : null,
       shopperReference: "12345",
       shopperEmail: "youremail@email.com",
+      /**
+       * TODO:
+       * dynamically populate shopperLocale
+       */
       shopperLocale: "en_US",
       lineItems: [
         {quantity: 1, amountIncludingTax: 5000 , description: "Sunglasses"},
