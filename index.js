@@ -3,7 +3,14 @@ import path from "path";
 import dotenv from "dotenv";
 import { v4 as uuid } from "uuid";
 // const { hmacValidator } = require('@adyen/api-library');
-import { Client, Config, CheckoutAPI } from "@adyen/api-library";
+import pkg from '@adyen/api-library';
+const { Client, Config, CheckoutAPI } = pkg;
+
+// enables environment variables by
+// parsing the .env file and assigning it to process.env
+dotenv.config({
+  path: "./.env",
+});
 
 // init app
 const app = express();
@@ -12,19 +19,15 @@ app.use(express.json());
 // Parse URL-encoded bodies
 app.use(express.urlencoded({ extended: true }));
 // Serve client from build folder
-app.use(express.static(path.join(__dirname, "/public")));
+// app.use(express.static(path.join(__dirname, "/public")));
+app.use(express.static(path.join(import.meta.dirname, "/public")));
 
-// enables environment variables by
-// parsing the .env file and assigning it to process.env
-dotenv.config({
-  path: "./.env",
-});
 
 // Adyen Node.js API library boilerplate (configuration, etc.)
 const config = new Config();
 config.apiKey = process.env.ADYEN_API_KEY;
-const client = new Client({ config });
-client.setEnvironment("TEST");
+config.environment = "TEST";
+const client = new Client(config);
 const checkout = new CheckoutAPI(client);
 
 
@@ -144,59 +147,6 @@ app.post("/api/payments/details", async (req, res) => {
 
 /* ################# CLIENT SIDE ENDPOINTS ###################### */
 
-// Index (select a demo)
-app.get("/", (req, res) => res.render("index"));
-
-// Cart (continue to checkout)
-app.get("/preview", (req, res) =>
-  res.render("preview", {
-    type: req.query.type,
-  })
-);
-
-app.get("/checkout/dropin", (req, res) =>
-  res.render("dropin", {
-    clientKey: process.env.ADYEN_CLIENT_KEY
-  })
-);
-
-app.get("/checkout/card", (req, res) =>
-  res.render("card", {
-    clientKey: process.env.ADYEN_CLIENT_KEY
-  })
-);
-
-app.get("/checkout/googlepay", (req, res) =>
-  res.render("googlepay", {
-    clientKey: process.env.ADYEN_CLIENT_KEY
-  })
-);
-
-app.get("/checkout/ideal", (req, res) =>
-  res.render("ideal", {
-    clientKey: process.env.ADYEN_CLIENT_KEY
-  })
-);
-
-app.get("/checkout/klarna", (req, res) =>
-  res.render("klarna", {
-    clientKey: process.env.ADYEN_CLIENT_KEY
-  })
-);
-
-app.get("/checkout/sepa", (req, res) =>
-  res.render("sepa", {
-    clientKey: process.env.ADYEN_CLIENT_KEY
-  })
-);
-
-// Result page
-app.get("/result/:type", (req, res) =>
-  res.render("result", {
-    type: req.params.type,
-  })
-);
-
 // Handle all redirects from payment type
 app.all("/handleShopperRedirect", async (req, res) => {
   // Create the payload for submitting payment details
@@ -231,7 +181,6 @@ app.all("/handleShopperRedirect", async (req, res) => {
     res.redirect("/result/error");
   }
 });
-
 
 /* ################# end CLIENT SIDE ENDPOINTS ###################### */
 
