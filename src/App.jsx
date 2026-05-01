@@ -22,6 +22,10 @@ function App() {
         clientKey: import.meta.env.VITE_ADYEN_CLIENT_KEY,
         environment: 'test',
         paymentMethodsResponse,
+        /**
+         * TODO:
+         * dynamic control over countryCode and locale
+         */
         countryCode: "US",
         locale: "en-US",
         onSubmit: async (state, dropin) => {
